@@ -12,7 +12,7 @@ interface DevRow { id: number; fecha_devolucion: string; cantidad_devuelta: numb
 
 const ESTADOS = [
   { value: 'bueno', label: 'Bueno' },
-  { value: 'con_dano', label: 'Con Dano' },
+  { value: 'con_daño', label: 'Con Daño' },
   { value: 'perdido', label: 'Perdido' },
 ];
 
