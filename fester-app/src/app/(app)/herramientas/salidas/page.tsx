@@ -132,12 +132,20 @@ export default function SalidasPage() {
             <label className="label">Herramientas *</label>
             <div className="space-y-2">
               {items.map((item, i) => (
-                <className="grid grid-cols-[1fr_6rem] gap-2 items-center">
-                  <select className="input w-full" required value={item.herramienta_id} onChange={(e) => setItem(i, 'herramienta_id', e.target.value)}>
-                    <option value="">-- Herramienta --</option>
-                    {herramientas.map((h) => <option key={h.id} value={h.id}>{h.nombre}</option>)}
-                  </select>
-                  <input className="input w-full" type="number" min="1" required value={item.cantidad} onChange={(e) => setItem(i, 'cantidad', e.target.value)} placeholder="Cant." />
+                <div key={i} className="flex gap-2 items-center">
+  <div className="flex-1 min-w-0">
+    <select className="input w-full" required value={item.herramienta_id} onChange={(e) => setItem(i, 'herramienta_id', e.target.value)}>
+      <option value="">-- Herramienta --</option>
+      {herramientas.map((h) => <option key={h.id} value={h.id}>{h.nombre}</option>)}
+    </select>
+  </div>
+  <div className="shrink-0 w-24">
+    <input className="input w-full" type="number" min="1" required value={item.cantidad} onChange={(e) => setItem(i, 'cantidad', e.target.value)} placeholder="Cant." />
+  </div>
+  {items.length > 1 && (
+    <button type="button" className="text-fester-red hover:opacity-70" onClick={() => removeItem(i)}><Trash2 size={16} /></button>
+  )}
+</div>
                   {items.length > 1 && (
                     <button type="button" className="text-fester-red hover:opacity-70" onClick={() => removeItem(i)}><Trash2 size={16} /></button>
                   )}
