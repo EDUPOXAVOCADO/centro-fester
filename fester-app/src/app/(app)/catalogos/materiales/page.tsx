@@ -33,9 +33,52 @@ export default function MaterialesPage() {
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  async function run(p: PromiseLike<{ error: any }>)
+  async function agregarMaterial(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nuevoMat.categoria_id || !nuevoMat.nombre.trim()) return;
     setMsg('');
-    const { error } = await p;
+    const { error } = await supabase.from('materiales').insert({
+      categoria_id: Number(nuevoMat.categoria_id),
+      nombre: nuevoMat.nombre.trim(),
+    });
+    if (error) setMsg(error.message);
+    else setNuevoMat({ categoria_id: nuevoMat.categoria_id, nombre: '' });
+    cargar();
+  }
+
+  async function agregarGarantia(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nuevaGar.material_id || !nuevaGar.etiqueta.trim()) return;
+    setMsg('');
+    const { error } = await supabase.from('garantias').insert({
+      material_id: Number(nuevaGar.material_id),
+      etiqueta: nuevaGar.etiqueta.trim(),
+    });
+    if (error) setMsg(error.message);
+    else setNuevaGar({ material_id: nuevaGar.material_id, etiqueta: '' });
+    cargar();
+  }
+
+  async function agregarZona(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nuevaZona.trim()) return;
+    setMsg('');
+    const { error } = await supabase.from('zonas').insert({ nombre: nuevaZona.trim() });
+    if (error) setMsg(error.message);
+    else setNuevaZona('');
+    cargar();
+  }
+
+  async function toggleMaterial(m: Material) {
+    setMsg('');
+    const { error } = await supabase.from('materiales').update({ activo: !m.activo }).eq('id', m.id);
+    if (error) setMsg(error.message);
+    cargar();
+  }
+
+  async function toggleZona(z: Zona) {
+    setMsg('');
+    const { error } = await supabase.from('zonas').update({ activo: !z.activo }).eq('id', z.id);
     if (error) setMsg(error.message);
     cargar();
   }
@@ -48,13 +91,7 @@ export default function MaterialesPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card">
           <h2 className="font-bold text-fester-blue mb-3">Materiales por categoría</h2>
-          <form className="flex flex-wrap gap-2 mb-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!nuevoMat.categoria_id || !nuevoMat.nombre.trim()) return;
-              run(supabase.from('materiales').insert({ categoria_id: Number(nuevoMat.categoria_id), nombre: nuevoMat.nombre.trim() }));
-              setNuevoMat({ categoria_id: nuevoMat.categoria_id, nombre: '' });
-            }}>
+          <form className="flex flex-wrap gap-2 mb-4" onSubmit={agregarMaterial}>
             <select className="input !w-auto flex-1 min-w-[180px]" value={nuevoMat.categoria_id}
               onChange={(e) => setNuevoMat({ ...nuevoMat, categoria_id: e.target.value })} required>
               <option value="">Categoría…</option>
@@ -80,7 +117,7 @@ export default function MaterialesPage() {
                         )}
                       </span>
                       <button className="text-xs font-semibold text-fester-blue hover:underline"
-                        onClick={() => run(supabase.from('materiales').update({ activo: !m.activo }).eq('id', m.id))}>
+                        onClick={() => toggleMaterial(m)}>
                         {m.activo ? 'Desactivar' : 'Activar'}
                       </button>
                     </li>
@@ -94,13 +131,7 @@ export default function MaterialesPage() {
         <div className="space-y-6">
           <div className="card">
             <h2 className="font-bold text-fester-blue mb-3">Garantías / Espesores</h2>
-            <form className="flex flex-wrap gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!nuevaGar.material_id || !nuevaGar.etiqueta.trim()) return;
-                run(supabase.from('garantias').insert({ material_id: Number(nuevaGar.material_id), etiqueta: nuevaGar.etiqueta.trim() }));
-                setNuevaGar({ material_id: nuevaGar.material_id, etiqueta: '' });
-              }}>
+            <form className="flex flex-wrap gap-2" onSubmit={agregarGarantia}>
               <select className="input !w-auto flex-1 min-w-[180px]" value={nuevaGar.material_id}
                 onChange={(e) => setNuevaGar({ ...nuevaGar, material_id: e.target.value })} required>
                 <option value="">Material…</option>
@@ -114,14 +145,9 @@ export default function MaterialesPage() {
 
           <div className="card">
             <h2 className="font-bold text-fester-blue mb-3">Zonas</h2>
-            <form className="flex gap-2 mb-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!nuevaZona.trim()) return;
-                run(supabase.from('zonas').insert({ nombre: nuevaZona.trim() }));
-                setNuevaZona('');
-              }}>
-              <input className="input" placeholder="Nueva zona" value={nuevaZona} onChange={(e) => setNuevaZona(e.target.value)} required />
+            <form className="flex gap-2 mb-3" onSubmit={agregarZona}>
+              <input className="input" placeholder="Nueva zona" value={nuevaZona}
+                onChange={(e) => setNuevaZona(e.target.value)} required />
               <button className="btn-primary"><Plus size={16} /></button>
             </form>
             <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
@@ -129,7 +155,7 @@ export default function MaterialesPage() {
                 <li key={z.id} className="flex items-center justify-between px-3 py-2 text-sm">
                   <span className={z.activo ? '' : 'line-through text-slate-400'}>{z.nombre}</span>
                   <button className="text-xs font-semibold text-fester-blue hover:underline"
-                    onClick={() => run(supabase.from('zonas').update({ activo: !z.activo }).eq('id', z.id))}>
+                    onClick={() => toggleZona(z)}>
                     {z.activo ? 'Desactivar' : 'Activar'}
                   </button>
                 </li>
