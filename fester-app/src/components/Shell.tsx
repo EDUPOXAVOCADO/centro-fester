@@ -9,7 +9,7 @@ import { PerfilProvider, usePerfil } from '@/components/PerfilContext';
 import type { Perfil } from '@/types/db';
 import {
   LayoutDashboard, TrendingUp, Package, Map, Trophy, Brain, ClipboardList,
-  PlusCircle, Users, FolderCog, FileBarChart2, LogOut, Menu, X, History, UserCog, Building2, ClipboardCheck,
+  PlusCircle, Users, FolderCog, FileBarChart2, LogOut, Menu, X, History, UserCog, Building2, ClipboardCheck, Wrench, ArrowUpFromLine, ArrowDownToLine, LayoutGrid,
 } from 'lucide-react';
 
 const adminNav = [
@@ -26,6 +26,10 @@ const adminNav = [
   { href: '/catalogos/materiales', label: 'Materiales y Zonas', icon: FolderCog },
   { href: '/usuarios', label: 'Usuarios', icon: UserCog },
   { href: '/reportes', label: 'Reportes', icon: FileBarChart2 },
+  { href: '/herramientas/catalogo', label: 'Herram. Catalogo', icon: Wrench },
+  { href: '/herramientas/salidas', label: 'Herram. Salidas', icon: ArrowUpFromLine },
+  { href: '/herramientas/devoluciones', label: 'Herram. Devoluciones', icon: ArrowDownToLine },
+  { href: '/herramientas/dashboard', label: 'Herram. Dashboard', icon: LayoutGrid },
 ];
 
 const aplicadorNav = [
@@ -36,6 +40,7 @@ const aplicadorNav = [
 const encargadoNav = [
   { href: '/encargado', label: 'Registrar Actividad', icon: ClipboardCheck },
   { href: '/mis-registros', label: 'Mis Registros de Hoy', icon: History },
+  { href: '/herramientas/mis-herramientas', label: 'Mis Herramientas', icon: Wrench },
 ];
 
 function Nav({ onNavigate }: { onNavigate?: () => void }) {
@@ -48,9 +53,7 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
         const active = pathname === href;
         return (
           <Link key={href} href={href} onClick={onNavigate}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-              active ? 'bg-white/15 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white'
-            }`}>
+            className={'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ' + (active ? 'bg-white/15 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white')}>
             <Icon size={18} /> {label}
           </Link>
         );
@@ -70,7 +73,7 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <>
       {open && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={onClose} />}
-      <aside className={`fixed z-40 inset-y-0 left-0 w-72 bg-fester-blue flex flex-col transition-transform lg:translate-x-0 lg:static ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={'fixed z-40 inset-y-0 left-0 w-72 bg-fester-blue flex flex-col transition-transform lg:translate-x-0 lg:static ' + (open ? 'translate-x-0' : '-translate-x-full')}>
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
           <Logo size={36} light />
           <button className="lg:hidden text-white" onClick={onClose}><X size={22} /></button>
