@@ -137,7 +137,7 @@ export default function SalidasPage() {
                     <option value="">-- Herramienta --</option>
                     {herramientas.map((h) => <option key={h.id} value={h.id}>{h.nombre}</option>)}
                   </select>
-                  <input className="input w-24" type="number" min="1" required value={item.cantidad} onChange={(e) => setItem(i, 'cantidad', e.target.value)} placeholder="Cant." />
+                  <input className="input flex-none w-24" type="number" min="1" required value={item.cantidad} onChange={(e) => setItem(i, 'cantidad', e.target.value)} placeholder="Cant." />
                   {items.length > 1 && (
                     <button type="button" className="text-fester-red hover:opacity-70" onClick={() => removeItem(i)}><Trash2 size={16} /></button>
                   )}
