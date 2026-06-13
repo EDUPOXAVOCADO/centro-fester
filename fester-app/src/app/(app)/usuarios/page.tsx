@@ -56,7 +56,7 @@ export default function UsuariosPage() {
 
   return (
     <AdminGuard>
-      <PageTitle title="Usuarios del Sistema" subtitle="Crea cuentas de acceso para administradores y aplicadores" />
+      <PageTitle title="Usuarios del Sistema" subtitle="Crea cuentas de acceso para administradores, encargados y aplicadores" />
 
       <div className="card mb-6">
         <h2 className="font-bold text-fester-blue mb-4 flex items-center gap-2"><UserPlus size={18} /> Crear usuario</h2>
@@ -78,8 +78,9 @@ export default function UsuariosPage() {
           </div>
           <div>
             <label className="label">Rol *</label>
-            <select className="input" value={form.rol} onChange={(e) => setForm({ ...form, rol: e.target.value })}>
+            <select className="input" value={form.rol} onChange={(e) => setForm({ ...form, rol: e.target.value, aplicador_id: '' })}>
               <option value="aplicador">Aplicador</option>
+              <option value="encargado">Encargado de cuadrilla</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
@@ -97,35 +98,10 @@ export default function UsuariosPage() {
           </div>
         </form>
         <p className="text-xs text-slate-400 mt-3">
-          El aplicador inicia sesión solo con su usuario y contraseña. Antes de crear el usuario, registra al aplicador en el catálogo.
+          {form.rol === 'encargado'
+            ? 'El encargado puede registrar actividades para cualquier aplicador del catálogo.'
+            : 'Antes de crear un usuario aplicador, regístralo primero en el catálogo de Aplicadores.'}
         </p>
       </div>
 
-      <div className="card overflow-x-auto p-0">
-        <table className="w-full min-w-[560px]">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr><th className="th">Nombre</th><th className="th">Usuario</th><th className="th">Rol</th><th className="th">Aplicador vinculado</th><th className="th"></th></tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {perfiles.map((p) => (
-              <tr key={p.id} className="hover:bg-slate-50">
-                <td className="td font-semibold">{p.nombre}</td>
-                <td className="td">{p.usuario}</td>
-                <td className="td">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${p.rol === 'admin' ? 'bg-blue-100 text-fester-blue' : 'bg-slate-100 text-slate-600'}`}>{p.rol}</span>
-                </td>
-                <td className="td">{p.aplicadores?.nombre_completo ?? '—'}</td>
-                <td className="td text-right">
-                  <button className="text-fester-blue hover:underline inline-flex items-center gap-1 text-sm font-semibold"
-                    onClick={() => resetPassword(p.id, p.nombre)}>
-                    <KeyRound size={14} /> Contraseña
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </AdminGuard>
-  );
-}
+      <div className="card overflow-x
