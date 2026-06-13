@@ -33,7 +33,7 @@ export default function MaterialesPage() {
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  async function run(p: PromiseLike<{ error: any }>) {
+  async function run(p: PromiseLike<{ error: any }>)
     setMsg('');
     const { error } = await p;
     if (error) setMsg(error.message);
