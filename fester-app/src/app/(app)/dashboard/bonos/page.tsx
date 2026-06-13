@@ -51,7 +51,7 @@ export default function BonosPage() {
         const k = claveMaterial(r);
         matCount.set(k, (matCount.get(k) ?? 0) + Number(r.m2));
       });
-      const materialPrincipal = [...matCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+      const materialPrincipal = Array.from(matCount.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
       const ap = aplicadores.find((a) => a.id === s.aplicador_id);
       return { ...s, materialPrincipal, foto: ap?.foto_url ?? null, zona: ap?.zonas?.nombre ?? '—' };
     });
