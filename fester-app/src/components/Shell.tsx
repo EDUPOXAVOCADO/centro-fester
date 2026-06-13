@@ -32,6 +32,22 @@ const adminNav = [
   { href: '/herramientas/dashboard', label: 'Herram. Dashboard', icon: LayoutGrid },
 ];
 
+const gerenteNav = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/productividad', label: 'Productividad', icon: TrendingUp },
+  { href: '/dashboard/materiales', label: 'Por Material', icon: Package },
+  { href: '/dashboard/bonos', label: 'Bonos Semanales', icon: Trophy },
+  { href: '/registros', label: 'Registros', icon: ClipboardList },
+  { href: '/registros/nuevo', label: 'Nueva Actividad', icon: PlusCircle },
+  { href: '/catalogos/aplicadores', label: 'Aplicadores', icon: Users },
+  { href: '/catalogos/obras', label: 'Obras', icon: Building2 },
+  { href: '/usuarios', label: 'Usuarios', icon: UserCog },
+  { href: '/herramientas/catalogo', label: 'Herram. Catalogo', icon: Wrench },
+  { href: '/herramientas/salidas', label: 'Herram. Salidas', icon: ArrowUpFromLine },
+  { href: '/herramientas/devoluciones', label: 'Herram. Devoluciones', icon: ArrowDownToLine },
+  { href: '/herramientas/dashboard', label: 'Herram. Dashboard', icon: LayoutGrid },
+];
+
 const aplicadorNav = [
   { href: '/registros/nuevo', label: 'Registrar Actividad', icon: PlusCircle },
   { href: '/mis-registros', label: 'Mi Historial', icon: History },
@@ -46,7 +62,10 @@ const encargadoNav = [
 function Nav({ onNavigate }: { onNavigate?: () => void }) {
   const perfil = usePerfil();
   const pathname = usePathname();
-  const items = perfil.rol === 'admin' ? adminNav : perfil.rol === 'encargado' ? encargadoNav : aplicadorNav;
+  const items = perfil.rol === 'admin' ? adminNav
+    : perfil.rol === 'gerente' ? gerenteNav
+    : perfil.rol === 'encargado' ? encargadoNav
+    : aplicadorNav;
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
       {items.map(({ href, label, icon: Icon }) => {
