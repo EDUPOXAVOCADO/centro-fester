@@ -1,4 +1,4 @@
-export type Rol = 'admin' | 'aplicador';
+export type Rol = 'admin' | 'aplicador' | 'encargado';
 
 export interface Perfil {
   id: string;
@@ -13,7 +13,7 @@ export interface Categoria { id: number; nombre: string; orden: number; }
 export interface Material { id: number; categoria_id: number; nombre: string; activo: boolean; }
 export interface Garantia { id: number; material_id: number; etiqueta: string; orden: number; }
 export interface Cliente { id: number; nombre: string; }
-export interface Obra { id: number; nombre: string; cliente_id: number | null; zona_id: number | null; }
+export interface Obra { id: number; nombre: string; cliente_id: number | null; zona_id: number | null; activo?: boolean; }
 
 export interface Aplicador {
   id: number;
