@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Vincular perfil con aplicador y asegurar rol
     const { error: e2 } = await admin
       .from('perfiles')
-      .update({ rol, nombre, aplicador_id: rol === 'aplicador' ? aplicador_id : null })
+      .update({ rol, nombre, aplicador_id: rol === 'aplicador' ? aplicador_id : null, zona_id: rol === 'gerente' ? zona_id : null })
       .eq('id', data.user.id);
     if (e2) return NextResponse.json({ error: e2.message }, { status: 400 });
 
