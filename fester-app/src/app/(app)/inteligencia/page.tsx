@@ -30,13 +30,11 @@ function generarInsights(registros: Registro[]): Insight[] {
   const regsSemana = registros.filter((x) => enRango(x, r.semana.desde, r.semana.hasta));
   const regsMes = registros.filter((x) => enRango(x, r.mes.desde, r.mes.hasta));
 
-  // Aplicador más productivo de la semana y del mes
   const topSemana = porAplicador(regsSemana)[0];
   if (topSemana) out.push({ tipo: 'logro', titulo: 'Aplicador más productivo de la semana', detalle: `${topSemana.nombre} con ${fmtNum(topSemana.m2)} m² en ${topSemana.obras} obra(s).` });
   const topMes = porAplicador(regsMes)[0];
   if (topMes) out.push({ tipo: 'logro', titulo: 'Aplicador más productivo del mes', detalle: `${topMes.nombre} con ${fmtNum(topMes.m2)} m² y promedio de ${fmtNum(topMes.m2PorHora)} m²/hora.` });
 
-  // Materiales más y menos utilizados
   const mats = porMaterial(registros);
   if (mats.length > 0) {
     out.push({ tipo: 'dato', titulo: 'Material más utilizado', detalle: `${mats[0].clave}: ${fmtNum(mats[0].m2)} m² en ${mats[0].registros} registro(s).` });
@@ -46,7 +44,6 @@ function generarInsights(registros: Registro[]): Insight[] {
     }
   }
 
-  // Zonas más y menos productivas (m²/h)
   const zonas = porZona(registros).map((z) => ({ ...z, prod: z.horas > 0 ? z.m2 / z.horas : 0 }));
   if (zonas.length > 0) {
     const masProd = [...zonas].sort((a, b) => b.prod - a.prod)[0];
@@ -57,7 +54,6 @@ function generarInsights(registros: Registro[]): Insight[] {
     }
   }
 
-  // Obras con baja productividad (m²/h < 50% de la media global)
   const horasTot = registros.reduce((s, x) => s + Number(x.horas), 0);
   const m2Tot = registros.reduce((s, x) => s + Number(x.m2), 0);
   const mediaGlobal = horasTot > 0 ? m2Tot / horasTot : 0;
@@ -69,7 +65,6 @@ function generarInsights(registros: Registro[]): Insight[] {
     });
   }
 
-  // Tendencia de crecimiento
   const crec = crecimientoMensual(registros);
   if (crec !== null) {
     out.push({
@@ -77,7 +72,7 @@ function generarInsights(registros: Registro[]): Insight[] {
       titulo: crec >= 0 ? `Crecimiento mensual de ${fmtNum(crec)}%` : `Caída mensual de ${fmtNum(Math.abs(crec))}%`,
       detalle: crec >= 0
         ? 'Los m² ejecutados este mes superan al mes anterior. La operación va en ascenso.'
-        : 'Los m² ejecutados este mes están por debajo del mes anterior. Revisa pipeline de obras y disponibilidad de aplicadores.',
+        : 'Los m² ejecutados este mes están por debajo del mes anterior. Revisa pipeline de obras.',
     });
   }
   const serie = serieMensual(registros, 3);
@@ -85,22 +80,21 @@ function generarInsights(registros: Registro[]): Insight[] {
     out.push({ tipo: 'tendencia', titulo: 'Tres meses consecutivos de crecimiento', detalle: `${serie.map((s) => `${s.etiqueta}: ${fmtNum(s.m2)} m²`).join(' → ')}.` });
   }
 
-  // Alertas operativas: aplicadores sin actividad esta semana
   const activosSemana = new Set(regsSemana.map((x) => x.aplicador_id));
   const activosMes = new Set(regsMes.map((x) => x.aplicador_id));
-  const inactivos = [...activosMes].filter((id) => !activosSemana.has(id));
+  const inactivos = Array.from(activosMes).filter((id) => !activosSemana.has(id));
   if (inactivos.length > 0) {
     const nombres = registros.filter((x) => inactivos.includes(x.aplicador_id)).map((x) => x.aplicadores?.nombre_completo).filter(Boolean);
-    out.push({ tipo: 'alerta', titulo: `${inactivos.length} aplicador(es) sin registros esta semana`, detalle: `Trabajaron este mes pero no esta semana: ${[...new Set(nombres)].slice(0, 5).join(', ')}.` });
+    const nombresUnicos = Array.from(new Set(nombres));
+    out.push({ tipo: 'alerta', titulo: `${inactivos.length} aplicador(es) sin registros esta semana`, detalle: `Trabajaron este mes pero no esta semana: ${nombresUnicos.slice(0, 5).join(', ')}.` });
   }
 
-  // Recomendaciones de capacitación: aplicadores 30% debajo de la media
   const statsApl = porAplicador(registros).filter((a) => a.horas >= 8);
   const rezagados = statsApl.filter((a) => a.m2PorHora < mediaGlobal * 0.7);
   if (rezagados.length > 0 && mediaGlobal > 0) {
     out.push({
       tipo: 'recomendacion', titulo: 'Recomendación de capacitación',
-      detalle: `${rezagados.map((a) => a.nombre).slice(0, 5).join(', ')} ${rezagados.length === 1 ? 'está' : 'están'} más de 30% por debajo de la productividad media (${fmtNum(mediaGlobal)} m²/h). Considera entrenamiento técnico o acompañamiento en obra.`,
+      detalle: `${rezagados.map((a) => a.nombre).slice(0, 5).join(', ')} ${rezagados.length === 1 ? 'está' : 'están'} más de 30% por debajo de la productividad media (${fmtNum(mediaGlobal)} m²/h).`,
     });
   }
 
@@ -120,7 +114,6 @@ export default function InteligenciaPage() {
   return (
     <AdminGuard>
       <PageTitle title="Inteligencia Operativa" subtitle="Análisis automático generado a partir de los registros capturados" />
-
       {cargando && <p className="text-sm text-slate-500">Analizando datos…</p>}
       {!cargando && insights.length === 0 && (
         <div className="card text-center py-14 text-slate-400">
@@ -128,7 +121,6 @@ export default function InteligenciaPage() {
           Aún no hay suficientes datos para generar análisis. Captura actividades y vuelve aquí.
         </div>
       )}
-
       <div className="grid gap-4 md:grid-cols-2">
         {insights.map((ins, i) => {
           const { Icon, cls } = ICONOS[ins.tipo];
