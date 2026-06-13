@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getSupabase } from '@/lib/supabase-browser';
 import { usePerfil } from '@/components/PerfilContext';
 import PageTitle from '@/components/PageTitle';
-import type { Aplicador, Categoria, Cliente, Garantia, Material, Obra, Zona } from '@/types/db';
+import type { Aplicador, Categoria, Garantia, Material } from '@/types/db';
 import { Camera, CheckCircle2, Save } from 'lucide-react';
 
 type FotoTipo = 'antes' | 'durante' | 'despues';
@@ -20,17 +20,15 @@ export default function NuevaActividadPage() {
   const perfil = usePerfil();
   const router = useRouter();
 
-  const [zonas, setZonas] = useState<Zona[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [materiales, setMateriales] = useState<Material[]>([]);
   const [garantias, setGarantias] = useState<Garantia[]>([]);
   const [aplicadores, setAplicadores] = useState<Aplicador[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [obras, setObras] = useState<Obra[]>([]);
+  const [obras, setObras] = useState<any[]>([]);
 
   const hoy = new Date().toISOString().slice(0, 10);
   const [f, setF] = useState({
-    fecha: hoy, aplicador_id: '', zona_id: '', cliente: '', obra: '',
+    fecha: hoy, aplicador_id: '', obra_id: '',
     categoria_id: '', material_id: '', garantia_id: '', m2: '', horas: '', observaciones: '',
   });
   const [fotos, setFotos] = useState<Record<FotoTipo, File | null>>({ antes: null, durante: null, despues: null });
@@ -40,32 +38,25 @@ export default function NuevaActividadPage() {
   const [saving, setSaving] = useState(false);
 
   const cargar = useCallback(async () => {
-    const [z, c, m, g, a, cl, ob] = await Promise.all([
-      supabase.from('zonas').select('*').eq('activo', true).order('nombre'),
+    const [c, m, g, a, ob] = await Promise.all([
       supabase.from('categorias').select('*').order('orden'),
       supabase.from('materiales').select('*').eq('activo', true).order('nombre'),
       supabase.from('garantias').select('*').order('orden'),
       supabase.from('aplicadores').select('*').eq('activo', true).order('nombre_completo'),
-      supabase.from('clientes').select('*').order('nombre'),
-      supabase.from('obras').select('*').order('nombre'),
+      supabase.from('obras').select('*, clientes(nombre), zonas(nombre)').neq('activo', false).order('nombre'),
     ]);
-    setZonas((z.data as Zona[]) ?? []);
     setCategorias((c.data as Categoria[]) ?? []);
     setMateriales((m.data as Material[]) ?? []);
     setGarantias((g.data as Garantia[]) ?? []);
     setAplicadores((a.data as Aplicador[]) ?? []);
-    setClientes((cl.data as Cliente[]) ?? []);
-    setObras((ob.data as Obra[]) ?? []);
+    setObras((ob.data as any[]) ?? []);
   }, [supabase]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  // Aplicador: selección automática según usuario logueado
   useEffect(() => {
     if (perfil.rol === 'aplicador' && perfil.aplicador_id) {
       setF((prev) => ({ ...prev, aplicador_id: String(perfil.aplicador_id) }));
-      const ap = aplicadores.find((a) => a.id === perfil.aplicador_id);
-      if (ap?.zona_id) setF((prev) => ({ ...prev, zona_id: prev.zona_id || String(ap.zona_id) }));
     }
   }, [perfil, aplicadores]);
 
@@ -87,11 +78,8 @@ export default function NuevaActividadPage() {
     e.preventDefault();
     setError(''); setOkMsg('');
 
-    // Validación estricta
     if (!f.aplicador_id) return setError('Selecciona el aplicador.');
-    if (!f.zona_id) return setError('Selecciona la zona.');
-    if (!f.cliente.trim()) return setError('Indica el cliente.');
-    if (!f.obra.trim()) return setError('Indica el nombre de la obra.');
+    if (!f.obra_id) return setError('Selecciona la obra.');
     if (!f.categoria_id || !f.material_id) return setError('Selecciona categoría y material.');
     if (garantiasFiltradas.length > 0 && !f.garantia_id) return setError('Selecciona la garantía / espesor del material.');
     const m2 = Number(f.m2), horas = Number(f.horas);
@@ -100,37 +88,17 @@ export default function NuevaActividadPage() {
     if (!fotos.antes || !fotos.durante || !fotos.despues)
       return setError('Las 3 fotografías (antes, durante y después) son OBLIGATORIAS.');
 
+    const obraSeleccionada = obras.find((o) => String(o.id) === f.obra_id);
+
     setSaving(true);
     try {
-      // 1. Cliente (buscar o crear)
-      let clienteId: number;
-      const cliEx = clientes.find((c) => c.nombre.toLowerCase() === f.cliente.trim().toLowerCase());
-      if (cliEx) clienteId = cliEx.id;
-      else {
-        const { data, error } = await supabase.from('clientes').insert({ nombre: f.cliente.trim() }).select('id').single();
-        if (error) throw error;
-        clienteId = data.id;
-      }
-
-      // 2. Obra (buscar o crear)
-      let obraId: number;
-      const obraEx = obras.find((o) => o.nombre.toLowerCase() === f.obra.trim().toLowerCase() && o.cliente_id === clienteId);
-      if (obraEx) obraId = obraEx.id;
-      else {
-        const { data, error } = await supabase.from('obras')
-          .insert({ nombre: f.obra.trim(), cliente_id: clienteId, zona_id: Number(f.zona_id) }).select('id').single();
-        if (error) throw error;
-        obraId = data.id;
-      }
-
-      // 3. Registro
       const { data: { user } } = await supabase.auth.getUser();
       const { data: reg, error: eReg } = await supabase.from('registros').insert({
         fecha: f.fecha,
         aplicador_id: Number(f.aplicador_id),
-        zona_id: Number(f.zona_id),
-        cliente_id: clienteId,
-        obra_id: obraId,
+        zona_id: obraSeleccionada?.zona_id ?? null,
+        cliente_id: obraSeleccionada?.cliente_id ?? null,
+        obra_id: Number(f.obra_id),
         categoria_id: Number(f.categoria_id),
         material_id: Number(f.material_id),
         garantia_id: f.garantia_id ? Number(f.garantia_id) : null,
@@ -140,7 +108,6 @@ export default function NuevaActividadPage() {
       }).select('id').single();
       if (eReg) throw eReg;
 
-      // 4. Fotografías (obligatorias) — si falla alguna, se elimina el registro
       try {
         for (const { tipo } of FOTOS) {
           const file = fotos[tipo]!;
@@ -159,7 +126,7 @@ export default function NuevaActividadPage() {
       }
 
       setOkMsg('Actividad registrada correctamente con sus 3 evidencias.');
-      setF({ ...f, cliente: '', obra: '', m2: '', horas: '', observaciones: '', garantia_id: '' });
+      setF({ ...f, obra_id: '', m2: '', horas: '', observaciones: '', garantia_id: '' });
       setFotos({ antes: null, durante: null, despues: null });
       setPreviews({ antes: '', durante: '', despues: '' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -204,28 +171,20 @@ export default function NuevaActividadPage() {
               </select>
             )}
           </div>
-          <div>
-            <label className="label">Zona *</label>
-            <select className="input" required value={f.zona_id} onChange={(e) => setF({ ...f, zona_id: e.target.value })}>
-              <option value="">— Seleccionar —</option>
-              {zonas.map((z) => <option key={z.id} value={z.id}>{z.nombre}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="label">Cliente *</label>
-            <input className="input" required list="clientes-list" value={f.cliente}
-              onChange={(e) => setF({ ...f, cliente: e.target.value })} placeholder="Nombre del cliente" />
-            <datalist id="clientes-list">
-              {clientes.map((c) => <option key={c.id} value={c.nombre} />)}
-            </datalist>
-          </div>
           <div className="sm:col-span-2">
-            <label className="label">Nombre de la obra *</label>
-            <input className="input" required list="obras-list" value={f.obra}
-              onChange={(e) => setF({ ...f, obra: e.target.value })} placeholder="ej. Bodega Nave 3 — Parque Industrial" />
-            <datalist id="obras-list">
-              {obras.map((o) => <option key={o.id} value={o.nombre} />)}
-            </datalist>
+            <label className="label">Obra *</label>
+            <select className="input" required value={f.obra_id}
+              onChange={(e) => setF({ ...f, obra_id: e.target.value })}>
+              <option value="">— Seleccionar obra —</option>
+              {obras.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.nombre}{o.clientes?.nombre ? ` — ${o.clientes.nombre}` : ''}{o.zonas?.nombre ? ` (${o.zonas.nombre})` : ''}
+                </option>
+              ))}
+            </select>
+            {obras.length === 0 && (
+              <p className="mt-1 text-xs text-amber-600">No hay obras activas. El administrador debe registrar obras en Catálogos → Obras.</p>
+            )}
           </div>
         </div>
 
@@ -275,7 +234,7 @@ export default function NuevaActividadPage() {
 
         <div className="card">
           <h2 className="font-bold text-fester-blue mb-1 flex items-center gap-2"><Camera size={18} /> Evidencias fotográficas *</h2>
-          <p className="text-xs text-slate-500 mb-4">Las tres fotografías son obligatorias. No se puede guardar el registro sin ellas.</p>
+          <p className="text-xs text-slate-500 mb-4">Las tres fotografías son obligatorias. Puedes elegir desde la galería o tomar una nueva.</p>
           <div className="grid gap-4 sm:grid-cols-3">
             {FOTOS.map(({ tipo, label }) => (
               <div key={tipo}>
@@ -289,10 +248,10 @@ export default function NuevaActividadPage() {
                   ) : (
                     <>
                       <Camera className="text-slate-400" size={28} />
-                      <span className="text-xs text-slate-500 text-center">Tocar para tomar o elegir foto</span>
+                      <span className="text-xs text-slate-500 text-center">Elegir desde galería o tomar foto</span>
                     </>
                   )}
-                  <input type="file" accept="image/*" capture="environment" className="hidden"
+                  <input type="file" accept="image/*" className="hidden"
                     onChange={(e) => setFoto(tipo, e.target.files?.[0] ?? null)} />
                 </label>
                 {fotos[tipo] && (
