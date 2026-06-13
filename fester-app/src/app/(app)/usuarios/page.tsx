@@ -105,3 +105,8 @@ export default function UsuariosPage() {
       </div>
 
       <div className="card overflow-x
+</table>
+      </div>
+    </AdminGuard>
+  );
+}
