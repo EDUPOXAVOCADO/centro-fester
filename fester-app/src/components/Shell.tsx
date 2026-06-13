@@ -66,3 +66,22 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
     await getSupabase().auth.signOut();
     router.replace('/login');
     router
+export default function Shell({ perfil, children }: { perfil: Perfil; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <PerfilProvider perfil={perfil}>
+      <div className="flex min-h-screen">
+        <Sidebar open={open} onClose={() => setOpen(false)} />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="sticky top-0 z-20 flex items-center gap-3 bg-white border-b border-slate-200 px-4 py-3 lg:px-8">
+            <button className="lg:hidden text-fester-blue" onClick={() => setOpen(true)}><Menu size={24} /></button>
+            <div className="text-sm font-semibold text-slate-600 truncate">
+              Sistema de Gestión y Productividad de Aplicadores
+            </div>
+          </header>
+          <main className="flex-1 p-4 lg:p-8 max-w-[1500px] w-full mx-auto">{children}</main>
+        </div>
+      </div>
+    </PerfilProvider>
+  );
+}
