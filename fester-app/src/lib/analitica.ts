@@ -21,7 +21,7 @@ export interface StatAplicador {
   obras: number;
   horas: number;
   registros: number;
-  promedioObra: number;   // m² por obra
+  promedioObra: number;
   m2PorHora: number;
 }
 
@@ -38,7 +38,7 @@ export function porAplicador(registros: Registro[]): StatAplicador[] {
     s.registros += 1;
     s.obraSet.add(r.obra_id);
   }
-  return [...map.values()]
+  return Array.from(map.values())
     .map(({ obraSet, ...s }) => ({
       ...s,
       obras: obraSet.size,
@@ -61,14 +61,12 @@ export function agrupar(registros: Registro[], keyFn: (r: Registro) => string): 
     s.registros += 1;
     s.obraSet.add(r.obra_id);
   }
-  return [...map.values()].map(({ obraSet, ...s }) => ({ ...s, obras: obraSet.size })).sort((a, b) => b.m2 - a.m2);
+  return Array.from(map.values()).map(({ obraSet, ...s }) => ({ ...s, obras: obraSet.size })).sort((a, b) => b.m2 - a.m2);
 }
 
 export const porZona = (rs: Registro[]) => agrupar(rs, (r) => r.zonas?.nombre ?? '—');
-// IMPORTANTE: material + garantía como unidad — nunca se mezclan materiales
 export const porMaterial = (rs: Registro[]) => agrupar(rs, claveMaterial);
 
-// Series de tendencia
 export function serieSemanal(registros: Registro[], semanas = 12, hoy = new Date()) {
   const out: { etiqueta: string; desde: string; hasta: string; m2: number }[] = [];
   for (let i = semanas - 1; i >= 0; i--) {
@@ -103,7 +101,7 @@ export function serieAnual(registros: Registro[]) {
     const y = r.fecha.slice(0, 4);
     map.set(y, (map.get(y) ?? 0) + Number(r.m2));
   }
-  return [...map.entries()].sort().map(([etiqueta, m2]) => ({ etiqueta, m2 }));
+  return Array.from(map.entries()).sort().map(([etiqueta, m2]) => ({ etiqueta, m2 }));
 }
 
 export function crecimientoMensual(registros: Registro[], hoy = new Date()): number | null {
