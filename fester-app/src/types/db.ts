@@ -1,4 +1,4 @@
-export type Rol = 'admin' | 'aplicador' | 'encargado';
+export type Rol = 'admin' | 'aplicador' | 'encargado' | 'gerente';
 
 export interface Perfil {
   id: string;
@@ -6,6 +6,7 @@ export interface Perfil {
   usuario: string | null;
   rol: Rol;
   aplicador_id: number | null;
+  zona_id: number | null;
 }
 
 export interface Zona { id: number; nombre: string; activo: boolean; }
