@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   if (!(await verificarAdmin()))
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
 
-  const { usuario, password, nombre, rol, aplicador_id } = await req.json();
+  const { usuario, password, nombre, rol, aplicador_id, zona_id } = await req.json();
   if (!usuario || !password || !nombre || !rol)
     return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 });
   if (password.length < 6)
