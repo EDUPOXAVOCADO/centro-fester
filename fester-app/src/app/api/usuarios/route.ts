@@ -9,7 +9,7 @@ async function verificarAdmin() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
   const { data: perfil } = await supabase.from('perfiles').select('rol').eq('id', user.id).single();
-  return perfil?.rol === 'admin' ? user : null;
+  return (perfil?.rol === 'admin' || perfil?.rol === 'gerente') ? user : null;
 }
 
 function adminClient() {
